@@ -6,6 +6,8 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.media.AudioManager;
+import android.media.SoundPool;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Vibrator;
@@ -29,19 +31,20 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private SensorManager mSensorManager;
     private Sensor mAccelerometerSensor;
-    private Vibrator mVibrator;
+    private Vibrator mVibrator;//手机震动
+    private SoundPool mSoundPool;//摇一摇音效
 
     //记录摇动状态
     private boolean isShake = false;
 
-    private ImageView mShakeTopImg;
-    private ImageView mShakeBottomImg;
+
     private LinearLayout mTopLayout;
     private LinearLayout mBottomLayout;
     private ImageView mTopLine;
     private ImageView mBottomLine;
 
     private MyHandler mHandler;
+    private int mWeiChatAudio;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,23 +56,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         initView();
         mHandler = new MyHandler(this);
 
-        //获取 SensorManager 负责管理传感器
-        mSensorManager = ((SensorManager) getSystemService(SENSOR_SERVICE));
-        if (mSensorManager != null) {
-            //获取加速度传感器
-            mAccelerometerSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            if (mAccelerometerSensor != null) {
-                mSensorManager.registerListener(this, mAccelerometerSensor, SensorManager.SENSOR_DELAY_UI);
-            }
-        }
+        //初始化SoundPool
+        mSoundPool = new SoundPool(1, AudioManager.STREAM_SYSTEM, 5);
+        mWeiChatAudio = mSoundPool.load(this, R.raw.weichat_audio, 1);
+
+
+
         //获取Vibrator震动服务
         mVibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
 
     }
 
     private void initView() {
-        mShakeTopImg = (ImageView) findViewById(R.id.main_shake_top);
-        mShakeBottomImg = (ImageView) findViewById(R.id.main_shake_bottom);
+
         mTopLayout = (LinearLayout) findViewById(R.id.main_linear_top);
         mBottomLayout = ((LinearLayout) findViewById(R.id.main_linear_bottom));
         mTopLine = (ImageView) findViewById(R.id.main_shake_top_line);
@@ -83,13 +82,30 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     @Override
-    protected void onDestroy() {
-        //不要忘记在Activity销毁时注销 mAccelerometerSensor
+    protected void onStart() {
+        super.onStart();
+        //获取 SensorManager 负责管理传感器
+        mSensorManager = ((SensorManager) getSystemService(SENSOR_SERVICE));
+        if (mSensorManager != null) {
+            //获取加速度传感器
+            mAccelerometerSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            if (mAccelerometerSensor != null) {
+                mSensorManager.registerListener(this, mAccelerometerSensor, SensorManager.SENSOR_DELAY_UI);
+            }
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        // 务必要在pause中注销 mSensorManager
+        // 否则会造成界面退出后摇一摇依旧生效的bug
         if (mSensorManager != null) {
             mSensorManager.unregisterListener(this);
         }
-        super.onDestroy();
+        super.onPause();
     }
+
+
 
     ///////////////////////////////////////////////////////////////////////////
     // SensorEventListener回调方法
@@ -117,7 +133,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                         super.run();
                         try {
                             Log.d(TAG, "onSensorChanged: 摇动");
-                            //开始震动和展示动画效果
+
+                            //开始震动 发出提示音 展示动画效果
                             mHandler.obtainMessage(START_SHAKE).sendToTarget();
                             Thread.sleep(500);
                             //再来一次震动提示
@@ -160,6 +177,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 case START_SHAKE:
                     //This method requires the caller to hold the permission VIBRATE.
                     mActivity.mVibrator.vibrate(300);
+                    //发出提示音
+                    mActivity.mSoundPool.play(mActivity.mWeiChatAudio, 1, 1, 0, 0, 1);
                     mActivity.mTopLine.setVisibility(View.VISIBLE);
                     mActivity.mBottomLine.setVisibility(View.VISIBLE);
                     mActivity.startAnimation(false);//参数含义: (不是回来) 也就是说两张图片分散开的动画
