@@ -1,6 +1,7 @@
 package com.lulu.weichatshake;
 
 import android.app.Activity;
+import android.content.pm.ActivityInfo;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -12,6 +13,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.TranslateAnimation;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
@@ -21,6 +24,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private static final String TAG = "MainActivity";
     private static final int START_SHAKE = 0x1;
+    private static final int AGAIN_SHAKE = 0x2;
+    private static final int END_SHAKE = 0x3;
 
     private SensorManager mSensorManager;
     private Sensor mAccelerometerSensor;
@@ -41,6 +46,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //设置只竖屏
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.activity_main);
         //初始化View
         initView();
@@ -113,6 +120,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                             //开始震动和展示动画效果
                             mHandler.obtainMessage(START_SHAKE).sendToTarget();
                             Thread.sleep(500);
+                            //再来一次震动提示
+                            mHandler.obtainMessage(AGAIN_SHAKE).sendToTarget();
+                            Thread.sleep(500);
+                            mHandler.obtainMessage(END_SHAKE).sendToTarget();
+
+
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -149,7 +162,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     mActivity.mVibrator.vibrate(300);
                     mActivity.mTopLine.setVisibility(View.VISIBLE);
                     mActivity.mBottomLine.setVisibility(View.VISIBLE);
-                    mActivity.startAnimation(false);//参数含义: 是
+                    mActivity.startAnimation(false);//参数含义: (不是回来) 也就是说两张图片分散开的动画
+                    break;
+                case AGAIN_SHAKE:
+                    mActivity.mVibrator.vibrate(300);
+                    break;
+                case END_SHAKE:
+                    //整体效果结束, 将震动设置为false
+                    mActivity.isShake = false;
+                    // 展示上下两种图片回来的效果
+                    mActivity.startAnimation(true);
                     break;
             }
         }
@@ -157,9 +179,62 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     /**
      * 开启 摇一摇动画
+     *
      * @param isBack 是否是返回初识状态
      */
     private void startAnimation(boolean isBack) {
+        //动画坐标移动的位置的类型是相对自己的
+        int type = Animation.RELATIVE_TO_SELF;
+
+        float topFromY;
+        float topToY;
+        float bottomFromY;
+        float bottomToY;
+        if (isBack) {
+            topFromY = -0.5f;
+            topToY = 0;
+            bottomFromY = 0.5f;
+            bottomToY = 0;
+        } else {
+            topFromY = 0;
+            topToY = -0.5f;
+            bottomFromY = 0;
+            bottomToY = 0.5f;
+        }
+
+        //上面图片的动画效果
+        TranslateAnimation topAnim = new TranslateAnimation(
+                type, 0, type, 0, type, topFromY, type, topToY
+        );
+        topAnim.setDuration(200);
+        //动画终止时停留在最后一帧~不然会回到没有执行之前的状态
+        topAnim.setFillAfter(true);
+
+        //底部的动画效果
+        TranslateAnimation bottomAnim = new TranslateAnimation(
+                type, 0, type, 0, type, bottomFromY, type, bottomToY
+        );
+        bottomAnim.setDuration(200);
+        bottomAnim.setFillAfter(true);
+
+        //大家一定不要忘记, 当要回来时, 我们中间的两根线需要GONE掉
+        if (isBack) {
+            bottomAnim.setAnimationListener(new Animation.AnimationListener() {
+                @Override
+                public void onAnimationStart(Animation animation) {}
+                @Override
+                public void onAnimationRepeat(Animation animation) {}
+                @Override
+                public void onAnimationEnd(Animation animation) {
+                    //当动画结束后 , 将中间两条线GONE掉
+                    mTopLine.setVisibility(View.GONE);
+                    mBottomLine.setVisibility(View.GONE);
+                }
+            });
+        }
+        //设置动画
+        mTopLayout.startAnimation(topAnim);
+        mBottomLayout.startAnimation(bottomAnim);
 
     }
 
