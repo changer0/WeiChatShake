@@ -60,8 +60,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mSoundPool = new SoundPool(1, AudioManager.STREAM_SYSTEM, 5);
         mWeiChatAudio = mSoundPool.load(this, R.raw.weichat_audio, 1);
 
-
-
         //获取Vibrator震动服务
         mVibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
 
@@ -160,16 +158,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private static class MyHandler extends Handler {
         private WeakReference<MainActivity> mReference;
-
         private MainActivity mActivity;
-
         public MyHandler(MainActivity activity) {
             mReference = new WeakReference<MainActivity>(activity);
             if (mReference != null) {
                 mActivity = mReference.get();
             }
         }
-
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
@@ -245,7 +240,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 public void onAnimationRepeat(Animation animation) {}
                 @Override
                 public void onAnimationEnd(Animation animation) {
-                    //当动画结束后 , 将中间两条线GONE掉
+                    //当动画结束后 , 将中间两条线GONE掉, 不让其占位
                     mTopLine.setVisibility(View.GONE);
                     mBottomLine.setVisibility(View.GONE);
                 }

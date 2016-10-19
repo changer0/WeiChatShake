@@ -8,20 +8,15 @@
     android:background="#ff222222"
     android:orientation="vertical"
     tools:context="com.lulu.weichatshake.MainActivity">
-
-
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-
         <!--摇一摇中心图片-->
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:src="@mipmap/ic_launcher"/>
-
-
+            android:src="@mipmap/weichat_icon"/>
         <LinearLayout
             android:gravity="center"
             android:orientation="vertical"
@@ -30,40 +25,31 @@
             android:layout_alignParentTop="true"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true">
-
-
+            <!--顶部的横线和图片-->
             <LinearLayout
                 android:gravity="center_horizontal|bottom"
                 android:id="@+id/main_linear_top"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentTop="true"
-                android:layout_centerHorizontal="true"
                 android:orientation="vertical">
-
                 <ImageView
-
                     android:src="@mipmap/shake_top"
                     android:id="@+id/main_shake_top"
                     android:layout_width="wrap_content"
                     android:layout_height="100dp"/>
-
                 <ImageView
                     android:background="@mipmap/shake_top_line"
                     android:id="@+id/main_shake_top_line"
                     android:layout_width="match_parent"
                     android:layout_height="5dp"/>
-
-
             </LinearLayout>
 
+            <!--底部的横线和图片-->
             <LinearLayout
                 android:gravity="center_horizontal|bottom"
                 android:id="@+id/main_linear_bottom"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:layout_centerHorizontal="true"
                 android:orientation="vertical">
 
                 <ImageView
@@ -71,19 +57,13 @@
                     android:id="@+id/main_shake_bottom_line"
                     android:layout_width="match_parent"
                     android:layout_height="5dp"/>
-
                 <ImageView
-
                     android:src="@mipmap/shake_bottom"
                     android:id="@+id/main_shake_bottom"
                     android:layout_width="wrap_content"
                     android:layout_height="100dp"/>
 
             </LinearLayout>
-
         </LinearLayout>
-
-
     </RelativeLayout>
-
 </LinearLayout>
